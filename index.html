@@ -1,15 +1,23 @@
 <html>
 <head>
-    <title>REU CDS Demo</title>
-
-    <script src="res/jquery.min.js"></script>
-    <script src="res/bonsai.min.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>
+<script type="text/javascript" async
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
+</script>
+<title>REU CDS Demo</title>
+<script src="res/jquery.min.js"></script>
+<script src="res/bonsai.min.js"></script>
+<script src="showmatrix.js"></script>
 </head>
 <body>
+    <h1 id="permutation"></h1>
     <div id="stage"></div>
-
-    <script type="text/javascript">
+	<h3 id="matrix"></h3>	
+	<script type="text/javascript">
         bonsai.run($('#stage')[0], 'demo.js');
     </script>
+	<script>showObjects(getPermMatrix(10));</script>
 </body>
-</body>
+</html>
