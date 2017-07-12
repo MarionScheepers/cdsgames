@@ -90,5 +90,5 @@ function getPermMatrix(n) {
 			A[j-i][j] ^= 1;
 		}
 	}
-	return A;
+	return {"perm": pi, "matrix": A};
 }
