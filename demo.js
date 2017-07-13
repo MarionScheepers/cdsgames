@@ -1,9 +1,9 @@
-var NODE_COUNT = 8;
+var NODE_COUNT = 12;
 var OFFSET = 50;
 var RADIUS = 250;
 var NODE_RADIUS = 20;
 
-var perm = getPermMatrix(8);
+var perm = getPermMatrix(NODE_COUNT);
 var matrix = perm['matrix'];
 
 function doClick(p,q) {
@@ -25,9 +25,9 @@ function updateEdges(mat,edges,delay) {
     delay = delay + 'ms';
     for (var i = 0; i < NODE_COUNT; i++) {
         for (var j = i; j < NODE_COUNT; j++) {
-            var color = mat[i][j] ? 'black' : 'white';
+            var edgeColor = mat[i][j] ? '#000000FF' : '#00000000';
             edges[i][j].animate('250ms', {
-                strokeColor: mat[i][j] ? 'black' : 'white' 
+                strokeColor: color.parse(edgeColor)
             }, {
                 delay: delay 
             });
@@ -42,7 +42,7 @@ for (var i = 0; i < NODE_COUNT; i++) {
         edges[i][j] =  new Path([
                             node_x(i), node_y(i),
                             node_x(j), node_y(j)
-                        ]).stroke('white', 5)
+                        ]).stroke(color.parse('#00000000'), 5)
                         .on('click', function(p,q) {
                             return function(e) {
                                 matrix = doClick(p,q);
