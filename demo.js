@@ -3,38 +3,54 @@ var OFFSET = 50;
 var RADIUS = 250;
 var NODE_RADIUS = 20;
 
-var nodes = [];
-for (var i = 0; i < NODE_COUNT; i++) {
-    nodes[i] = [false,false,false,false,false,false,false,false];
+var perm = getPermMatrix(8);
+var matrix = perm['matrix'];
+
+function doClick(p,q) {
+    var res = [];
+    for (var i = 0; i < NODE_COUNT; i++) {
+        res[i] = [];
+        for (var j = 0; j < NODE_COUNT; j++) {
+            if ((matrix[i][p] && matrix[j][q]) ^ (matrix[i][q] && matrix[j][p])) {
+                res[i][j] = matrix[i][j] ^ 1;
+            } else {
+                res[i][j] = matrix[i][j];
+            }
+        } 
+    }  
+    return res;
 }
 
-var edges = 12 + Math.random()*5;
-for (var i = 0; i < edges; i++) {
-    var n1 = Math.floor(Math.random()*NODE_COUNT);
-    var n2 = Math.floor(Math.random()*NODE_COUNT);
-    if (n1 == n2 || nodes[n1][n2]) { i--; }
-    else {
-        nodes[n1][n2] = true;
-        nodes[n2][n1] = true;
+function updateEdges(mat,edges,delay) {
+    delay = delay + 'ms';
+    for (var i = 0; i < NODE_COUNT; i++) {
+        for (var j = i; j < NODE_COUNT; j++) {
+            var color = mat[i][j] ? 'black' : 'white';
+            edges[i][j].animate('250ms', {
+                strokeColor: mat[i][j] ? 'black' : 'white' 
+            }, {
+                delay: delay 
+            });
+        } 
     }
 }
 
+var edges = [];
 for (var i = 0; i < NODE_COUNT; i++) {
+    edges[i] = [];
     for (var j = i; j < NODE_COUNT; j++) {
-        if (nodes[i][j]) {
-            new Path([
-                node_x(i), node_y(i),
-                node_x(j), node_y(j)
-            ]).stroke('white', 5)
-                .animate('250ms', { 
-                    strokeColor: 'black' 
-                }, {
-                    delay: (NODE_COUNT*100 + 200) + 'ms'
-                })
-                .addTo(stage);
-        }
+        edges[i][j] =  new Path([
+                            node_x(i), node_y(i),
+                            node_x(j), node_y(j)
+                        ]).stroke('white', 5)
+                        .on('click', function(p,q) {
+                            return function(e) {
+                                matrix = doClick(p,q);
+                                updateEdges(matrix,edges,0); 
+                            };
+                        }(i,j))
+                        .addTo(stage);
     }
-    
     new Circle(node_x(i), node_y(i), NODE_RADIUS)
         .attr('fillColor', 'white')
         .stroke('white', 5)
@@ -45,7 +61,7 @@ for (var i = 0; i < NODE_COUNT; i++) {
         })
         .addTo(stage);
 }
-
+updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
 
 //// HELPER FUNCTIONS
 
