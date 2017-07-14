@@ -8,10 +8,16 @@ var NODE_COUNT = 12;
 var OFFSET = 50;
 var RADIUS = 250;
 var NODE_RADIUS = 20;
+var HANDLE_RADIUS = 30;
 var SENSE_DIST = 10;
 
 var perm = getPermMatrix(NODE_COUNT);
 var matrix = perm['matrix'];
+
+var nodePos = [];
+for (var i=0; i<NODE_COUNT; ++i) {
+	nodePos[i] = [node_x(i), node_y(i)];
+}
 
 function doClick(p,q) {
     if (!matrix[p][q]) return matrix;
@@ -60,22 +66,32 @@ for (var i = 0; i < NODE_COUNT; i++) {
                         }(i,j))*/
                         .addTo(stage);
     }
-    new Circle(node_x(i), node_y(i), NODE_RADIUS)
-        .attr('fillColor', 'white')
-        .stroke('white', 5)
-        .animate('500ms', { 
-            strokeColor: 'black' 
-        }, {
-            delay: (i * 100) + 'ms'
-        })
-        .addTo(stage);
+	if (i == 0 || i == NODE_COUNT-1) {
+		var x = nodePos[i][0], y = nodePos[i][1];
+		new Path([x, y+HANDLE_RADIUS, x-HANDLE_RADIUS, y,
+				  x, y-HANDLE_RADIUS, x+HANDLE_RADIUS, y,
+				  x, y+HANDLE_RADIUS])
+		    .attr('fillColor', 'white')
+			.stroke('white', 5)
+			.animate('500ms', { 
+				strokeColor: 'black' 
+			}, {
+				delay: (i * 100) + 'ms'
+			})
+			.addTo(stage);
+	} else {
+		new Circle(node_x(i), node_y(i), NODE_RADIUS)
+			.attr('fillColor', 'white')
+			.stroke('white', 5)
+			.animate('500ms', { 
+				strokeColor: 'black' 
+			}, {
+				delay: (i * 100) + 'ms'
+			})
+			.addTo(stage);
+	}
 }
 updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
-
-var nodePos = [];
-for (var i=0; i<NODE_COUNT; ++i) {
-	nodePos[i] = [node_x(i), node_y(i)];
-}
 
 stage.on('click', function(e) {
 	var edge = getChosenEdge(e.x, e.y);
@@ -91,10 +107,10 @@ stage.on('click', function(e) {
 function getChosenEdge(x, y) {
 	var minDist = SENSE_DIST, bestEdge = [-1, -1];
 	var	x1, y1, a, b, dist;
-	for (var i=0; i<NODE_COUNT; ++i) {
+	for (var i=1; i<NODE_COUNT-1; ++i) {
 		x1 = nodePos[i][0];
 		y1 = nodePos[i][1];
-		for (var j=i+1; j<NODE_COUNT; ++j) {
+		for (var j=i+1; j<NODE_COUNT-1; ++j) {
 			if (!matrix[i][j]) continue;
 			a = nodePos[j][0]-x1;
 			b = nodePos[j][1]-y1;
@@ -109,10 +125,10 @@ function getChosenEdge(x, y) {
 }
 
 function node_x(i) {
-    return RADIUS * Math.sin(i * 2. * Math.PI / NODE_COUNT) + RADIUS + OFFSET;
+    return RADIUS * Math.sin((i * 2.+1.) * Math.PI / NODE_COUNT) + RADIUS + OFFSET;
 }
 function node_y(i) {
-    return RADIUS * -Math.cos(i * 2. * Math.PI / NODE_COUNT) + RADIUS + OFFSET;
+    return RADIUS * -Math.cos((i * 2.+1.) * Math.PI / NODE_COUNT) + RADIUS + OFFSET;
 }
 
 function getPermMatrix(n) {
