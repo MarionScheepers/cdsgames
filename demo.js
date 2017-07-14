@@ -8,6 +8,7 @@ var NODE_COUNT = 12;
 var OFFSET = 50;
 var RADIUS = 250;
 var NODE_RADIUS = 20;
+var SENSE_DIST = 10;
 
 var perm = getPermMatrix(NODE_COUNT);
 var matrix = perm['matrix'];
@@ -42,6 +43,7 @@ function updateEdges(mat,edges,delay) {
     }
 }
 
+
 var edges = [];
 for (var i = 0; i < NODE_COUNT; i++) {
     edges[i] = [];
@@ -50,12 +52,12 @@ for (var i = 0; i < NODE_COUNT; i++) {
                             node_x(i), node_y(i),
                             node_x(j), node_y(j)
                         ]).stroke(color.parse('#00000000'), 5)
-                        .on('click', function(p,q) {
+                        /*.on('click', function(p,q) {
                             return function(e) {
                                 matrix = doClick(p,q);
                                 updateEdges(matrix,edges,0); 
                             };
-                        }(i,j))
+                        }(i,j))*/
                         .addTo(stage);
     }
     new Circle(node_x(i), node_y(i), NODE_RADIUS)
@@ -70,7 +72,41 @@ for (var i = 0; i < NODE_COUNT; i++) {
 }
 updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
 
+var nodePos = [];
+for (var i=0; i<NODE_COUNT; ++i) {
+	nodePos[i] = [node_x(i), node_y(i)];
+}
+
+stage.on('click', function(e) {
+	var edge = getChosenEdge(e.x, e.y);
+	if (edge[0] != -1) {
+		matrix = doClick(edge[0], edge[1]);
+		updateEdges(matrix, edges, 0);
+	}
+});
+
+
 //// HELPER FUNCTIONS
+
+function getChosenEdge(x, y) {
+	var minDist = SENSE_DIST, bestEdge = [-1, -1];
+	var	x1, y1, a, b, dist;
+	for (var i=0; i<NODE_COUNT; ++i) {
+		x1 = nodePos[i][0];
+		y1 = nodePos[i][1];
+		for (var j=i+1; j<NODE_COUNT; ++j) {
+			if (!matrix[i][j]) continue;
+			a = nodePos[j][0]-x1;
+			b = nodePos[j][1]-y1;
+			dist = Math.abs((y1-y)*a-(x1-x)*b)/Math.sqrt(a*a+b*b);
+			if (dist < minDist) {
+				minDist = dist;
+				bestEdge = [i,j];
+			}
+		} 
+	}
+	return bestEdge;
+}
 
 function node_x(i) {
     return RADIUS * Math.sin(i * 2. * Math.PI / NODE_COUNT) + RADIUS + OFFSET;
@@ -114,4 +150,26 @@ function getPermMatrix(n) {
 		}
 	}
 	return {"perm": pi, "matrix": A};
+}
+
+function showObjects(state) {
+	var permStr = "$(";
+	var n = state.perm.length-2;
+	for (var i=1; i<n; ++i) {
+		permStr += state.perm[i].toString()+",";
+	}
+	permStr += state.perm[n] + ")$";
+	document.getElementById("permutation").innerHTML = permStr;
+	var matStr = "$\\begin{pmatrix}";
+	for (var i=0; i<n+1; ++i) {
+		for (var j=0; j<n; ++j) {
+			matStr += state.matrix[i][j].toString()+"&";
+		}
+		matStr += state.matrix[i][n].toString();
+		if (i < n) {
+			matStr += "\\\\";
+		}
+	}
+	matStr += "\\end{pmatrix}$";
+	document.getElementById("matrix").innerHTML = matStr;
 }
