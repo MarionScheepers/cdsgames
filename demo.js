@@ -1,3 +1,9 @@
+/*  
+ *  Copyright © 2017 Colby Brown, Sam Heil. All rights reserved.
+ *  This software is released under the MIT Licence. 
+ *  See LICENSE for more information.
+*/
+
 var NODE_COUNT = 12;
 var OFFSET = 50;
 var RADIUS = 250;
@@ -7,6 +13,7 @@ var perm = getPermMatrix(NODE_COUNT);
 var matrix = perm['matrix'];
 
 function doClick(p,q) {
+    if (!matrix[p][q]) return matrix;
     var res = [];
     for (var i = 0; i < NODE_COUNT; i++) {
         res[i] = [];

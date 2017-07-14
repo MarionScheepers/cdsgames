@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2017 Colby Brown, Sam Heil
+ * This software is released under the MIT license.
+ * See LICENSE for more information.
+ */
 function getPermMatrix(n) {
 	n--;
     var elems = [];
