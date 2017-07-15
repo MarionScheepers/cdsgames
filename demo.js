@@ -133,8 +133,6 @@ function cds(pi, p, q) {
             pi2.push(pi[i]);
     } else {
         if (qptrs[1] < pptrs[0] || qptrs[1] > pptrs[1]) {
-            console.log(pptrs);
-            console.log(qptrs);
             return undefined;
         }
         pptrs[0] >>= 1; pptrs[1] >>= 1;
