@@ -11,13 +11,72 @@ var NODE_RADIUS = 20;
 var HANDLE_RADIUS = 30;
 var SENSE_DIST = 10;
 
-var perm = getPermMatrix(NODE_COUNT);
-var matrix = perm['matrix'];
+var perm;
+var edges = [];
+
+if (stage.options.sorttype == "sortable") {
+	perm = sortablePermMatrix(NODE_COUNT);
+} else if (stage.options.sorttype == "unsortable") {
+	perm = unsortablePermMatrix(NODE_COUNT);
+} else {
+	perm = getPermMatrix(NODE_COUNT);
+}
+
+var matrix = perm["matrix"];
 
 var nodePos = [];
 for (var i=0; i<NODE_COUNT; ++i) {
 	nodePos[i] = [node_x(i), node_y(i)];
 }
+for (var i = 0; i < NODE_COUNT; i++) {
+	edges[i] = [];
+	for (var j = i; j < NODE_COUNT; j++) {
+		edges[i][j] =  new Path([
+							node_x(i), node_y(i),
+							node_x(j), node_y(j)
+						]).stroke(color.parse('#00000000'), 5)
+						/*.on('click', function(p,q) {
+							return function(e) {
+								matrix = doClick(p,q);
+								updateEdges(matrix,edges,0); 
+							};
+						}(i,j))*/
+						.addTo(stage);
+	}
+	if (i == 0 || i == NODE_COUNT-1) {
+		var x = nodePos[i][0], y = nodePos[i][1];
+		new Path([x, y+HANDLE_RADIUS, x-HANDLE_RADIUS, y,
+				  x, y-HANDLE_RADIUS, x+HANDLE_RADIUS, y,
+				  x, y+HANDLE_RADIUS])
+			.attr('fillColor', 'white')
+			.stroke('white', 5)
+			.animate('500ms', { 
+				strokeColor: 'black' 
+			}, {
+				delay: (i * 100) + 'ms'
+			})
+			.addTo(stage);
+	} else {
+		new Circle(node_x(i), node_y(i), NODE_RADIUS)
+			.attr('fillColor', 'white')
+			.stroke('white', 5)
+			.animate('500ms', { 
+				strokeColor: 'black' 
+			}, {
+				delay: (i * 100) + 'ms'
+			})
+			.addTo(stage);
+	}
+}
+updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
+
+stage.on('click', function(e) {
+	var edge = getChosenEdge(e.x, e.y);
+	if (edge[0] != -1) {
+		matrix = doClick(edge[0], edge[1]);
+		updateEdges(matrix, edges, 0);
+	}
+});
 
 function doClick(p,q) {
     if (!matrix[p][q]) return matrix;
@@ -49,59 +108,6 @@ function updateEdges(mat,edges,delay) {
     }
 }
 
-
-var edges = [];
-for (var i = 0; i < NODE_COUNT; i++) {
-    edges[i] = [];
-    for (var j = i; j < NODE_COUNT; j++) {
-        edges[i][j] =  new Path([
-                            node_x(i), node_y(i),
-                            node_x(j), node_y(j)
-                        ]).stroke(color.parse('#00000000'), 5)
-                        /*.on('click', function(p,q) {
-                            return function(e) {
-                                matrix = doClick(p,q);
-                                updateEdges(matrix,edges,0); 
-                            };
-                        }(i,j))*/
-                        .addTo(stage);
-    }
-	if (i == 0 || i == NODE_COUNT-1) {
-		var x = nodePos[i][0], y = nodePos[i][1];
-		new Path([x, y+HANDLE_RADIUS, x-HANDLE_RADIUS, y,
-				  x, y-HANDLE_RADIUS, x+HANDLE_RADIUS, y,
-				  x, y+HANDLE_RADIUS])
-		    .attr('fillColor', 'white')
-			.stroke('white', 5)
-			.animate('500ms', { 
-				strokeColor: 'black' 
-			}, {
-				delay: (i * 100) + 'ms'
-			})
-			.addTo(stage);
-	} else {
-		new Circle(node_x(i), node_y(i), NODE_RADIUS)
-			.attr('fillColor', 'white')
-			.stroke('white', 5)
-			.animate('500ms', { 
-				strokeColor: 'black' 
-			}, {
-				delay: (i * 100) + 'ms'
-			})
-			.addTo(stage);
-	}
-}
-updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
-
-stage.on('click', function(e) {
-	var edge = getChosenEdge(e.x, e.y);
-	if (edge[0] != -1) {
-		matrix = doClick(edge[0], edge[1]);
-		updateEdges(matrix, edges, 0);
-	}
-});
-
-
 //// HELPER FUNCTIONS
 
 function getChosenEdge(x, y) {
@@ -131,18 +137,22 @@ function node_y(i) {
     return RADIUS * -Math.cos((i * 2.+1.) * Math.PI / NODE_COUNT) + RADIUS + OFFSET;
 }
 
-function getPermMatrix(n) {
-	n--;
-    var elems = [];
+function getPermutation(n) {
+	var elems = [];
 	for (var i=0; i<n; ++i)
 		elems[i] = i+1;
-	var pi = [0];
+	var pi = [];
 	for (var i=n; i>0; --i) {
 		var k = Math.floor(Math.random()*i);
-		pi[i] = elems[k];
+		pi[i-1] = elems[k];
 		elems.splice(k, 1);
 	}
-	pi.push(n+1);
+	return pi;
+}
+
+function getAdjMat(perm) {
+	var n = perm.length;
+	var pi = [0].concat(perm).concat([n+1]);
 	var P = [];
 	for (var i=0; i<n+2; ++i) {
 		P[pi[i]] = [];
@@ -165,24 +175,70 @@ function getPermMatrix(n) {
 			A[j-i][j] ^= 1;
 		}
 	}
-	return {"perm": pi, "matrix": A};
+	return A;
+}
+
+function getPermMatrix(n) {
+	var pi = getPermutation(n-1);
+	return {"perm": pi, "matrix": getAdjMat(pi)};
+}
+
+function sortablePermMatrix(n) {
+	var pi;
+	do {
+		pi = getPermutation(n-1);
+	} while (SP(pi).length > 0);
+	return {"perm": pi, "matrix": getAdjMat(pi)};
+}
+
+function unsortablePermMatrix(n) {
+	var pi;
+	do {
+		pi = getPermutation(n-1);
+	} while (SP(pi).length == 0);
+	return {"perm": pi, "matrix": getAdjMat(pi)};
+}
+
+function SP(pi) {
+	var n = pi.length;
+	var Y_pi = [];
+	Y_pi[pi[0]] = 0;
+	for (var i=1; i<n; ++i) {
+		Y_pi[pi[i]] = pi[i-1];
+	}
+    Y_pi[0] = pi[n-1];
+	Y_pi[n+1] = pi[n-1];
+	var x = 0;
+	while (x != n) {
+		x = Y_pi[x+1];
+		if (x == 0) {
+			return [];
+		}
+	}
+	var pile = []
+	while (x != 0) {
+		x = Y_pi[x+1];
+		pile.push(x);
+	}
+	pile.pop();
+	return pile;
 }
 
 function showObjects(state) {
 	var permStr = "$(";
-	var n = state.perm.length-2;
-	for (var i=1; i<n; ++i) {
+	var n = state.perm.length;
+	for (var i=0; i<n-1; ++i) {
 		permStr += state.perm[i].toString()+",";
 	}
-	permStr += state.perm[n] + ")$";
+	permStr += state.perm[n-1] + ")$";
 	document.getElementById("permutation").innerHTML = permStr;
 	var matStr = "$\\begin{pmatrix}";
-	for (var i=0; i<n+1; ++i) {
-		for (var j=0; j<n; ++j) {
+	for (var i=0; i<n; ++i) {
+		for (var j=0; j<n-1; ++j) {
 			matStr += state.matrix[i][j].toString()+"&";
 		}
-		matStr += state.matrix[i][n].toString();
-		if (i < n) {
+		matStr += state.matrix[i][n-1].toString();
+		if (i < n-1) {
 			matStr += "\\\\";
 		}
 	}

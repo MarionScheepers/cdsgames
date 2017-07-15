@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 Copyright © 2017 Colby Brown, Sam Heil. All rights reserved.
 This software is released under the MIT license.
 See LICENSE for more information.
@@ -9,20 +9,39 @@ See LICENSE for more information.
 MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
 </script>
 <script type="text/javascript" async
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_CHTML">
 </script>
 <title>REU CDS Demo</title>
 <script src="res/jquery.min.js"></script>
 <script src="res/bonsai.min.js"></script>
 <script src="showmatrix.js"></script>
+<script>
+function runDemo() {
+	document.getElementById("stage").innerHTML = "";
+    var x;
+	if (document.getElementById("sorttype2").checked)
+		x = "sortable";
+	else if (document.getElementById("sorttype3").checked)
+		x = "unsortable";
+	else
+		x = "random";
+	bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: x});
+}
+</script>
 </head>
 <body>
-    <!--<h1 id="permutation"></h1>-->
+    <h1 id="permutation"></h1>
     <div id="stage"></div>
 	<h3 id="matrix"></h3>	
+	<form>
+	<input type="radio" id="sorttype1" name="sorttype" value="random" checked>Random<br>
+	<input type="radio" id="sorttype2" name="sorttype" value="sortable">Sortable<br>
+	<input type="radio" id="sorttype3" name="sorttype" value="unsortable">Unsortable<br>
+	<input type="button" onclick="runDemo()" value="Get Permutation">
+	</form>
 	<script type="text/javascript">
         bonsai.run($('#stage')[0], 'demo.js');
     </script>
-	<script>showObjects(getPermMatrix(10));</script>
+	<!--<script>showObjects(matrix);</script>-->
 </body>
 </html>
