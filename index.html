@@ -6,6 +6,14 @@ See LICENSE for more information.
 <html>
 <head>
 <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none"
+});
+</script>
+<style>
+  math {display:none}
+</style>
+<script type="text/x-mathjax-config">
 MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
 </script>
 <script type="text/javascript" async
@@ -25,7 +33,10 @@ function runDemo() {
 		x = "unsortable";
 	else
 		x = "random";
-	bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: x});
+	var game = bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: x});
+	game.on('message:change', function(arg) {
+		showObjects(arg);
+	});
 }
 </script>
 </head>
@@ -40,7 +51,10 @@ function runDemo() {
 	<input type="button" onclick="runDemo()" value="Get Permutation">
 	</form>
 	<script type="text/javascript">
-        bonsai.run($('#stage')[0], 'demo.js');
+        var game = bonsai.run($('#stage')[0], 'demo.js');
+		game.on('message:change', function(arg) {
+			showObjects(arg);
+		});
     </script>
 	<!--<script>showObjects(matrix);</script>-->
 </body>

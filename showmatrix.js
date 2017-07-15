@@ -42,11 +42,11 @@ function getPermMatrix(n) {
 
 function showObjects(state) {
 	var permStr = "$(";
-	var n = state.perm.length-2;
-	for (var i=1; i<n; ++i) {
+	var n = state.perm.length;
+	for (var i=0; i<n-1; ++i) {
 		permStr += state.perm[i].toString()+",";
 	}
-	permStr += state.perm[n] + ")$";
+	permStr += state.perm[n-1] + ")$";
 	document.getElementById("permutation").innerHTML = permStr;
 	var matStr = "$\\begin{pmatrix}";
 	for (var i=0; i<n+1; ++i) {
@@ -60,4 +60,12 @@ function showObjects(state) {
 	}
 	matStr += "\\end{pmatrix}$";
 	document.getElementById("matrix").innerHTML = matStr;
+	document.getElementById('matrix').style.visibility = "hidden";
+	document.getElementById('permutation').style.visibility = "hidden";
+	MathJax.Hub.Queue(["Typeset",MathJax.Hub,"permutation"]);
+	MathJax.Hub.Queue(["Typeset",MathJax.Hub,"matrix"]);
+	MathJax.Hub.Queue(function() {
+        document.getElementById('matrix').style.visibility = "";
+		document.getElementById('permutation').style.visibility = "";
+	});
 }

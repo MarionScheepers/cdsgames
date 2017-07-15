@@ -21,7 +21,7 @@ if (stage.options.sorttype == "sortable") {
 } else {
 	perm = getPermMatrix(NODE_COUNT);
 }
-
+stage.sendMessage('change', perm);
 var matrix = perm["matrix"];
 
 var nodePos = [];
@@ -74,6 +74,9 @@ stage.on('click', function(e) {
 	var edge = getChosenEdge(e.x, e.y);
 	if (edge[0] != -1) {
 		matrix = doClick(edge[0], edge[1]);
+		perm['perm'] = cds(perm['perm'], edge[0], edge[1]);
+		perm['matrix'] = matrix;
+		stage.sendMessage('change', perm);
 		updateEdges(matrix, edges, 0);
 	}
 });
@@ -92,6 +95,62 @@ function doClick(p,q) {
         } 
     }  
     return res;
+}
+
+function cds(pi, p, q) {
+	pptrs = [];
+	qptrs = [];
+	for (var i=0; i<pi.length; ++i) {
+		if (pi[i] == p) {
+			pptrs.push(2*i+2);
+		}
+		if (pi[i] == p+1) {
+			pptrs.push(2*i+1);
+		}
+		if (pi[i] == q) {
+			qptrs.push(2*i+2);
+		}
+		if (pi[i] == q+1) {
+			qptrs.push(2*i+1);
+		}
+	}
+	pi2 = []
+	if (pptrs[0] < qptrs[0]) {
+		if (pptrs[1] < qptrs[0] || pptrs[1] > qptrs[1]) {
+			return undefined;
+		}
+		pptrs[0] >>= 1; pptrs[1] >>= 1;
+		qptrs[0] >>= 1; qptrs[1] >>= 1;
+		for (var i=0; i<pptrs[0]; ++i)
+			pi2.push(pi[i]);
+		for (var i=pptrs[1]; i<qptrs[1]; ++i)
+			pi2.push(pi[i]);
+		for (var i=qptrs[0]; i<pptrs[1]; ++i)
+			pi2.push(pi[i]);
+		for (var i=pptrs[0]; i<qptrs[0]; ++i)
+			pi2.push(pi[i]);
+		for (var i=qptrs[1]; i<pi.length; ++i)
+			pi2.push(pi[i]);
+	} else {
+		if (qptrs[1] < pptrs[0] || qptrs[1] > pptrs[1])	{
+			console.log(pptrs);
+			console.log(qptrs);
+			return undefined;
+		}
+		pptrs[0] >>= 1; pptrs[1] >>= 1;
+		qptrs[0] >>= 1; qptrs[1] >>= 1;
+		for (var i=0; i<qptrs[0]; ++i)
+			pi2.push(pi[i]);
+		for (var i=qptrs[1]; i<pptrs[1]; ++i)
+			pi2.push(pi[i]);
+		for (var i=pptrs[0]; i<qptrs[1]; ++i)
+			pi2.push(pi[i]);
+		for (var i=qptrs[0]; i<pptrs[0]; ++i)
+			pi2.push(pi[i]);
+		for (var i=pptrs[1]; i<pi.length; ++i)
+			pi2.push(pi[i]);	
+	}
+	return pi2;
 }
 
 function updateEdges(mat,edges,delay) {
