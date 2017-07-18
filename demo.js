@@ -10,20 +10,32 @@ var RADIUS = 250;
 var NODE_RADIUS = 20;
 var HANDLE_RADIUS = 30;
 var SENSE_DIST = 10;
+var MIN_SP_GAME = 3;
 
 var perm;
 var edges = [];
+
+var gameOn = false;
 
 if (stage.options.sorttype == "sortable") {
     perm = sortablePermMatrix(NODE_COUNT);
 } else if (stage.options.sorttype == "unsortable") {
     perm = unsortablePermMatrix(NODE_COUNT);
+} else if (stage.options.sorttype == "game") {
+	do {
+		perm = unsortablePermMatrix(NODE_COUNT);
+	} while (SP(perm.perm).length < MIN_SP_GAME);
+	gameOn = true;
 } else {
     perm = getPermMatrix(NODE_COUNT);
 }
+if (gameOn) {
+	perm["pile"] = SP(perm.perm);
+	perm["pile"].sort(function(a,b) { return a-b; });
+}
 stage.sendMessage('change', perm);
 var matrix = perm["matrix"];
-
+var nodes = [];
 var nodePos = [];
 for (var i=0; i<NODE_COUNT; ++i) {
     nodePos[i] = [node_x(i), node_y(i)];
@@ -45,10 +57,10 @@ for (var i = 0; i < NODE_COUNT; i++) {
     }
     if (i == 0 || i == NODE_COUNT-1) {
         var x = nodePos[i][0], y = nodePos[i][1];
-        new Path([x, y+HANDLE_RADIUS, x-HANDLE_RADIUS, y,
+        nodes.push(new Path([x, y+HANDLE_RADIUS, x-HANDLE_RADIUS, y,
                   x, y-HANDLE_RADIUS, x+HANDLE_RADIUS, y,
-                  x, y+HANDLE_RADIUS, x-HANDLE_RADIUS, y])
-            .attr('fillColor', 'white')
+                  x, y+HANDLE_RADIUS, x-HANDLE_RADIUS, y]));
+		nodes[i].attr('fillColor', 'white')
             .stroke('white', 5)
             .animate('500ms', { 
                 strokeColor: 'black' 
@@ -57,8 +69,27 @@ for (var i = 0; i < NODE_COUNT; i++) {
             })
             .addTo(stage);
     } else {
-        new Circle(node_x(i), node_y(i), NODE_RADIUS)
-            .attr('fillColor', 'white')
+		var inPile = false;
+		if (gameOn) {
+			for (var k=0; k<perm['pile'].length; ++k) {
+				if (perm['pile'][k] == i) {
+					inPile = true;
+				}
+			}
+		}
+		if (gameOn && inPile) {
+			nodes.push(new Circle(node_x(i), node_y(i), NODE_RADIUS));
+			nodes[i].attr('fillColor', 'green')
+            .stroke('green', 5)
+            .animate('500ms', { 
+                strokeColor: 'black' 
+            }, {
+                delay: (i * 100) + 'ms'
+            })
+            .addTo(stage);
+		} else {
+			nodes.push(new Circle(node_x(i), node_y(i), NODE_RADIUS));
+            nodes[i].attr('fillColor', 'white')
             .stroke('white', 5)
             .animate('500ms', { 
                 strokeColor: 'black' 
@@ -66,16 +97,43 @@ for (var i = 0; i < NODE_COUNT; i++) {
                 delay: (i * 100) + 'ms'
             })
             .addTo(stage);
+		}
     }
 }
-updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
+counted = [];
+for (var i=0; i<NODE_COUNT; ++i)
+	counted.push(0);
 
+updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
 stage.on('click', function(e) {
+	if (gameOn) {
+		var vtx = getChosenVertex(e.x, e.y);
+		if (vtx != -1) {
+			counted[vtx] = 1;
+			nodes[vtx].attr('fillColor', 'red');
+		}
+		var ctdSum = 0;
+		for (var v = 0; v < NODE_COUNT; ++v)
+			ctdSum += counted[v];
+		if ((ctdSum+1)*2 > perm['pile'].length) {
+			gameOn = false;
+			for (var j=0; j<perm['pile'].length; ++j) {
+				if (!counted[perm['pile'][j]]) {
+					nodes[perm['pile'][j]].attr('fillColor', 'blue');
+				}
+			}
+		}
+		return;
+	}
     var edge = getChosenEdge(e.x, e.y);
     if (edge[0] != -1) {
         matrix = doClick(edge[0], edge[1]);
         perm['perm'] = cds(perm['perm'], edge[0], edge[1]);
         perm['matrix'] = matrix;
+		if (gameOn) {
+			perm["pile"] = SP(perm.perm);
+			perm["pile"].sort(function(a,b) { return a-b; });
+		}
         stage.sendMessage('change', perm);
         updateEdges(matrix, edges, 0);
     }
@@ -167,7 +225,24 @@ function updateEdges(mat,edges,delay) {
 
 //// HELPER FUNCTIONS
 
+function getChosenVertex(x, y) {
+	for (var j=0; j<perm['pile'].length; ++j) {
+		var i = perm['pile'][j];
+		var x1 = nodePos[i][0];
+        var y1 = nodePos[i][1];
+		if ((x1-x)**2+(y1-y)**2 < NODE_RADIUS**2) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 function getChosenEdge(x, y) {
+	for (var i=0; i<NODE_COUNT; ++i) {
+		if ((x-nodePos[i][0])**2+(y-nodePos[i][1])**2 < NODE_RADIUS**2) {
+			return -1;
+		}
+	}
     var minDist = SENSE_DIST, bestEdge = [-1, -1];
     var x1, y1, a, b, dist;
     for (var i=1; i<NODE_COUNT-1; ++i) {

@@ -32,6 +32,8 @@ function runDemo() {
         x = "sortable";
     else if (document.getElementById("sorttype3").checked)
         x = "unsortable";
+	else if (document.getElementById("sorttype4").checked)
+		x = "game";
     else
         x = "random";
     var game = bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: x});
@@ -43,6 +45,7 @@ function runDemo() {
 </head>
 <body>
     <h1 id="permutation"></h1>
+	<h1 id="pile"></h1>
     <div id="stage"></div>
     <h3 id="matrix"></h3> 
 	<div class="container">
@@ -50,8 +53,9 @@ function runDemo() {
 	<div class="form-group">
 	<div class="radio"><input type="radio" id="sorttype1" name="sorttype" value="random" checked>Random<br></div>
     <div class="radio"><input type="radio" id="sorttype2" name="sorttype" value="sortable">Sortable<br></div>
-    <div class="radio"><input type="radio" id="sorttype3" name="sorttype" value="unsortable">Unsortable<br></div></div>
-    <input type="button" onclick="runDemo()" value="Get Permutation">
+    <div class="radio"><input type="radio" id="sorttype3" name="sorttype" value="unsortable">Unsortable<br></div>
+    <div class="radio"><input type="radio" id="sorttype4" name="sorttype" value="game">Game<br></div></div>
+	<input type="button" onclick="runDemo()" value="Get Permutation">
 	</div>
     </form>
 	</div>
