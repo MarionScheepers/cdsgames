@@ -44,3 +44,43 @@ function showObjects(state) {
         document.getElementById('permutation').style.visibility = "";
     });
 }
+
+var NODE_COUNT = 12;
+
+function getPermutation(n) {
+    var elems = [];
+    for (var i=0; i<n; ++i)
+        elems[i] = i+1;
+    var pi = [];
+    for (var i=n; i>0; --i) {
+        var k = Math.floor(Math.random()*i);
+        pi[i-1] = elems[k];
+        elems.splice(k, 1);
+    }
+    return pi;
+}
+
+function SP(pi) {
+    var n = pi.length;
+    var Y_pi = [];
+    Y_pi[pi[0]] = 0;
+    for (var i=1; i<n; ++i) {
+        Y_pi[pi[i]] = pi[i-1];
+    }
+    Y_pi[0] = pi[n-1];
+    Y_pi[n+1] = pi[n-1];
+    var x = 0;
+    while (x != n) {
+        x = Y_pi[x+1];
+        if (x == 0) {
+            return [];
+        }
+    }
+    var pile = []
+    while (x != 0) {
+        x = Y_pi[x+1];
+        pile.push(x);
+    }
+    pile.pop();
+    return pile;
+}

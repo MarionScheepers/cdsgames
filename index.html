@@ -25,18 +25,37 @@ See LICENSE for more information.
 <script src="res/bonsai.min.js"></script>
 <script src="showmatrix.js"></script>
 <script>
+var p = [];
 function runDemo() {
-    document.getElementById("stage").innerHTML = "";
+	document.getElementById("stage").innerHTML = "";
+	document.getElementById("fixedchoose").hidden = true;
     var x;
     if (document.getElementById("sorttype2").checked)
         x = "sortable";
     else if (document.getElementById("sorttype3").checked)
         x = "unsortable";
-	else if (document.getElementById("sorttype4").checked)
-		x = "game";
+	else if (document.getElementById("sorttype4").checked) {
+		x = "game_init";
+		document.getElementById("fixedchoose").hidden = false;
+		var spSize = Math.floor(Math.random()*(NODE_COUNT-5)+3);
+		do {
+			p = getPermutation(NODE_COUNT-1);
+		} while (SP(p).length != spSize);
+		document.getElementById("fixedchoose").innerHTML = 'Number of fixed points for Red (pick number from 0 to '+spSize.toString()+'):<br>	<input type="text" id="p1points" name="sorttype"><br><input type="button" onclick="selectFixedPoints()" value="Select">';
+	}
     else
         x = "random";
-    var game = bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: x});
+    var game = bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: x, permutation: p});
+    game.on('message:change', function(arg) {
+        showObjects(arg);
+    });
+}
+
+function selectFixedPoints() {
+	document.getElementById("stage").innerHTML = "";
+	document.getElementById("fixedchoose").hidden = true;
+    var numFixed = Number(document.getElementById("p1points").value);
+	var game = bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: "game", permutation: p, nfixed: numFixed});
     game.on('message:change', function(arg) {
         showObjects(arg);
     });
@@ -45,7 +64,12 @@ function runDemo() {
 </head>
 <body>
     <h1 id="permutation"></h1>
-	<h1 id="pile"></h1>
+	<form id="fixedchoose" action="javascript:selectFixedPoints()" hidden>
+	Number of fixed points for red:<br>
+	<input type="text" id="p1points" name="sorttype"><br>
+	<input type="button" onclick="selectFixedPoints()" value="Select">
+	</form>
+	<h1 id="pile" hidden></h1>
     <div id="stage"></div>
     <h3 id="matrix"></h3> 
 	<div class="container">
@@ -54,7 +78,8 @@ function runDemo() {
 	<div class="radio"><input type="radio" id="sorttype1" name="sorttype" value="random" checked>Random<br></div>
     <div class="radio"><input type="radio" id="sorttype2" name="sorttype" value="sortable">Sortable<br></div>
     <div class="radio"><input type="radio" id="sorttype3" name="sorttype" value="unsortable">Unsortable<br></div>
-    <div class="radio"><input type="radio" id="sorttype4" name="sorttype" value="game">Game<br></div></div>
+    <div class="radio"><input type="radio" id="sorttype4" name="sorttype" value="game">Game<br></div>
+	</div>
 	<input type="button" onclick="runDemo()" value="Get Permutation">
 	</div>
     </form>

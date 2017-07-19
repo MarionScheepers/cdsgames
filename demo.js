@@ -15,17 +15,24 @@ var MIN_SP_GAME = 3;
 var perm;
 var edges = [];
 
+var gameInit = false;
 var gameOn = false;
+var gamePlaying = false;
+var redFixed;
 
 if (stage.options.sorttype == "sortable") {
     perm = sortablePermMatrix(NODE_COUNT);
 } else if (stage.options.sorttype == "unsortable") {
     perm = unsortablePermMatrix(NODE_COUNT);
-} else if (stage.options.sorttype == "game") {
-	do {
-		perm = unsortablePermMatrix(NODE_COUNT);
-	} while (SP(perm.perm).length < MIN_SP_GAME);
+} else if (stage.options.sorttype == "game_init") {
+	gameInit = true;
 	gameOn = true;
+	perm = {'perm': stage.options.permutation, 'matrix': getAdjMat(stage.options.permutation)};
+} else if (stage.options.sorttype == "game") {
+	gameInit = false;
+	gameOn = true;
+	perm = {'perm': stage.options.permutation, 'matrix': getAdjMat(stage.options.permutation)};
+	redFixed = stage.options.nfixed;
 } else {
     perm = getPermMatrix(NODE_COUNT);
 }
@@ -106,6 +113,9 @@ for (var i=0; i<NODE_COUNT; ++i)
 
 updateEdges(matrix, edges, 100 * (NODE_COUNT + 2));
 stage.on('click', function(e) {
+	if (gameInit) {
+		return;
+	}
 	if (gameOn) {
 		var vtx = getChosenVertex(e.x, e.y);
 		if (vtx != -1) {
@@ -115,8 +125,9 @@ stage.on('click', function(e) {
 		var ctdSum = 0;
 		for (var v = 0; v < NODE_COUNT; ++v)
 			ctdSum += counted[v];
-		if ((ctdSum+1)*2 > perm['pile'].length) {
+		if (ctdSum == redFixed) {
 			gameOn = false;
+			gamePlaying = true;
 			for (var j=0; j<perm['pile'].length; ++j) {
 				if (!counted[perm['pile'][j]]) {
 					nodes[perm['pile'][j]].attr('fillColor', 'blue');
@@ -133,6 +144,41 @@ stage.on('click', function(e) {
 		if (gameOn) {
 			perm["pile"] = SP(perm.perm);
 			perm["pile"].sort(function(a,b) { return a-b; });
+		}
+		var isoCount = 0;
+		for (var i=1; i<perm['perm'].length; ++i) {
+			var colSum = 0;
+			for (var j=0; j<=perm['perm'].length; ++j) {
+				colSum += matrix[i][j];
+			}
+			if (colSum == 0) {
+				++isoCount;
+			}
+		}
+		if (gamePlaying && isoCount == perm['perm'].length-2) {
+			var p1wins = false;
+			var x = SP(perm['perm'])[0];
+			if (counted[x]) {
+				new Text('Red wins!').addTo(stage).attr({
+				  x: RADIUS, 
+				  y: RADIUS,
+				  fontFamily: 'Arial, sans-serif',
+				  fontSize: '32',
+				  textFillColor: 'red',
+				  textStrokeColor: 'red',
+				  textStrokeWidth: 2
+				});
+			} else {
+				new Text('Blue wins!').addTo(stage).attr({
+				  x: RADIUS, 
+				  y: RADIUS,
+				  fontFamily: 'Arial, sans-serif',
+				  fontSize: '32',
+				  textFillColor: 'blue',
+				  textStrokeColor: 'blue',
+				  textStrokeWidth: 2
+				});
+			}
 		}
         stage.sendMessage('change', perm);
         updateEdges(matrix, edges, 0);
