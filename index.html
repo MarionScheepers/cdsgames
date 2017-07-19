@@ -52,10 +52,14 @@ function runDemo() {
 }
 
 function selectFixedPoints() {
+	var numFixed = Number(document.getElementById("p1points").value);
+	if (numFixed < 0 || numFixed > SP(p).length) {
+		document.getElementById("p1points").value = "invalid fixed point count";
+		return;
+	}
 	document.getElementById("stage").innerHTML = "";
 	document.getElementById("fixedchoose").hidden = true;
-    var numFixed = Number(document.getElementById("p1points").value);
-	var game = bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: "game", permutation: p, nfixed: numFixed});
+    var game = bonsai.run($('#stage')[0], {url: 'demo.js', sorttype: "game", permutation: p, nfixed: numFixed});
     game.on('message:change', function(arg) {
         showObjects(arg);
     });
