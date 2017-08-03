@@ -1,10 +1,10 @@
-/*  
+﻿/*  
  *  Copyright © 2017 Colby Brown, Sam Heil. All rights reserved.
  *  This software is released under the MIT Licence. 
  *  See LICENSE for more information.
 */
 
-var NODE_COUNT = 12;
+var NODE_COUNT = 13;
 var OFFSET = 50;
 var RADIUS = 250;
 var NODE_RADIUS = 20;
