@@ -45,7 +45,7 @@ function showObjects(state) {
     });
 }
 
-var NODE_COUNT = 12;
+var NODE_COUNT = 13;
 
 function getPermutation(n) {
     var elems = [];
